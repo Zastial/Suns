@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sûns — site officiel
 
-## Getting Started
+Next.js 16 (App Router, TypeScript, Turbopack). La page d'accueil est pré-rendue en statique.
 
-First, run the development server:
+## Lancer
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
+npm run build      # build de production
+npm run start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Modifier le contenu
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Nouvelle sortie** : ajoute une entrée dans `src/data/discography.ts` et mets la pochette dans `public/img/`.
+  L'accueil (« Nouveau single »), le bandeau et la discographie se mettent à jour tout seuls.
+- **Réseaux sociaux** : liste `.platforms` dans `src/components/site/Listen.tsx`.
+- **Domaine** : `NEXT_PUBLIC_SITE_URL` (voir `.env.example`), utilisé pour les aperçus de liens.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Structure
 
-## Learn More
+```
+src/
+  app/
+    layout.tsx            racine : polices (next/font), métadonnées
+    globals.css           styles
+    icon.svg              favicon
+    (site)/               vitrine publique
+      layout.tsx          ciel, nav, footer, lecteur
+      page.tsx            accueil
+  components/
+    player/               lecteur d'extraits (contexte React + mini-lecteur)
+    site/                 sections de la page
+  data/discography.ts     sorties
+  lib/                    helpers (liens Spotify, useInView)
+_archive/static-v1/       ancienne version HTML/CSS/JS (référence)
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Pour la suite (pas encore fait)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Chaque grande zone aura son propre groupe de routes à côté de `(site)`, avec son layout :
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `(fan)/` : espace fan avec connexion (ex. Auth.js ou Clerk) et pages protégées via `src/proxy.ts`
+- `boutique/` : merch (ex. Shopify Storefront API ou Stripe Checkout)
+- `billetterie/` : dates et billets (ex. lien partenaire, ou Stripe si vente directe)
+- `app/api/…` : route handlers (webhooks de paiement, synchro Spotify, etc.)
 
-## Deploy on Vercel
+## Déploiement (Docker)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Le site tourne dans un conteneur, exposé seulement en local sur `127.0.0.1:3100` ; le reverse proxy (Apache) est configuré sur le serveur.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+docker compose up -d --build   # build + lancement (le --build sert pour les mises à jour)
+```
+
+Pour changer de domaine : `NEXT_PUBLIC_SITE_URL` dans un fichier `.env` à côté de `docker-compose.yml`, puis `docker compose up -d --build`.
